@@ -533,6 +533,32 @@ body {
   width: 100%;
 }
 
+.auth-google-wrap {
+  margin-top: 16px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--user-muted);
+  font-size: 0.82rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.25);
+}
+
+.auth-google-btn {
+  display: flex;
+  justify-content: center;
+}
+
 .auth-switch {
   margin: 18px 0 0;
   color: var(--user-muted);

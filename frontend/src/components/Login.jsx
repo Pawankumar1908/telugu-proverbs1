@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../styles/user-dashboard.css";
 import { API_BASE_URL } from "../api/config";
 
@@ -9,6 +9,81 @@ export default function Login({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const googleButtonRef = useRef(null);
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+
+  useEffect(() => {
+    if (!googleClientId || !googleButtonRef.current) return;
+
+    const handleGoogleCredential = async (response) => {
+      if (!response?.credential) {
+        setError("Google sign-in failed. Please try again.");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const authResponse = await fetch(`${API_BASE_URL}/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+
+        const data = await authResponse.json();
+        if (!authResponse.ok || !data.success) {
+          throw new Error(data.detail || "Google login failed");
+        }
+
+        onLogin({
+          email: data.email,
+          token: data.token,
+          role: data.role,
+          user_id: data.user_id || data.email,
+          name: data.name || "",
+          picture: data.picture || "",
+          provider: "google",
+        });
+      } catch (err) {
+        setError(err.message || "Google authentication failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const initializeGoogle = () => {
+      if (!window.google?.accounts?.id || !googleButtonRef.current) return;
+      googleButtonRef.current.innerHTML = "";
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredential,
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        width: 320,
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      initializeGoogle();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = initializeGoogle;
+    document.body.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, [googleClientId, onLogin]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -109,6 +184,15 @@ export default function Login({ onLogin }) {
             {loading ? "Please wait..." : isRegister ? "Register" : "Login"}
           </button>
         </form>
+
+        {googleClientId ? (
+          <div className="auth-google-wrap">
+            <div className="auth-divider">
+              <span>or continue with</span>
+            </div>
+            <div ref={googleButtonRef} className="auth-google-btn" />
+          </div>
+        ) : null}
 
         <p className="auth-switch">
           {isRegister ? "Already have an account?" : "Don't have an account?"}

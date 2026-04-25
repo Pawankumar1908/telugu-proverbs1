@@ -5,11 +5,13 @@ from typing import Optional
 from model import ProverbModel
 from session import get_session
 from utils import format_cards, format_explanation
-from config import ADMIN_EMAIL, ADMIN_PASSWORD, FRONTEND_ORIGINS
-from db import store_vote, get_downvoted_proverbs, get_upvoted_proverbs, add_proverb, get_all_proverbs, bulk_insert_proverbs, get_analytics, check_duplicate_proverb_by_fields, submit_annotation, get_pending_annotations, approve_annotation, reject_annotation, get_annotator_stats, get_annotation_history, get_repository_proverbs, delete_proverb
+from config import ADMIN_EMAIL, ADMIN_PASSWORD, FRONTEND_ORIGINS, GOOGLE_CLIENT_ID
+from db import store_vote, get_downvoted_proverbs, get_upvoted_proverbs, add_proverb, get_all_proverbs, bulk_insert_proverbs, get_analytics, check_duplicate_proverb_by_fields, submit_annotation, get_pending_annotations, approve_annotation, reject_annotation, get_annotator_stats, get_annotation_history, get_repository_proverbs, delete_proverb, upsert_user_auth
 import csv
 from io import StringIO
 from indic_transliteration.sanscript import transliterate, TELUGU, ITRANS
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 app = FastAPI()
 allowed_origins = [
@@ -65,6 +67,10 @@ class AnnotationRequest(BaseModel):
     meaning: str
     keywords: str
     context_meaning: str = ""
+
+
+class GoogleAuthRequest(BaseModel):
+    credential: str
 
 
 def _normalize_csv_header(header: str) -> str:
@@ -141,6 +147,7 @@ def login(req: LoginRequest):
     
     # Check if admin
     if req.email == ADMIN_EMAIL and req.password == ADMIN_PASSWORD:
+        upsert_user_auth(email=req.email, provider="local", role="admin")
         return {
             "success": True,
             "role": "admin",
@@ -149,7 +156,8 @@ def login(req: LoginRequest):
             "user_id": req.email
         }
     
-    # Normal user login (simplified - would integrate with Supabase)
+    # Normal user login (simplified)
+    upsert_user_auth(email=req.email, provider="local", role="user")
     return {
         "success": True,
         "role": "user",
@@ -157,6 +165,51 @@ def login(req: LoginRequest):
         "token": f"user-token-{req.email}",
         "user_id": req.email  # Use email as user_id
     }
+
+
+@app.post("/auth/google")
+def google_auth(req: GoogleAuthRequest):
+    """Authenticate user with Google ID token and store user profile in MongoDB."""
+    if not req.credential:
+        raise HTTPException(status_code=400, detail="Google credential is required")
+
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is not configured")
+
+    try:
+        payload = id_token.verify_oauth2_token(
+            req.credential,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID
+        )
+
+        email = payload.get("email")
+        if not email:
+            raise HTTPException(status_code=400, detail="Google account email is unavailable")
+
+        role = "admin" if email == ADMIN_EMAIL else "user"
+        user = upsert_user_auth(
+            email=email,
+            provider="google",
+            name=payload.get("name", ""),
+            picture=payload.get("picture", ""),
+            role=role,
+            google_sub=payload.get("sub", "")
+        )
+
+        return {
+            "success": True,
+            "role": role,
+            "email": email,
+            "token": f"{role}-token-{email}",
+            "user_id": email,
+            "name": payload.get("name", ""),
+            "picture": payload.get("picture", ""),
+            "provider": "google",
+            "profile": user or {}
+        }
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Google token")
 
 
 @app.post("/vote")

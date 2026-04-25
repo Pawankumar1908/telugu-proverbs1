@@ -27,6 +27,41 @@ def close_db():
         _client.close()
         print("[MongoDB] Connection closed")
 
+
+def upsert_user_auth(email: str, provider: str = "local", name: str = "", picture: str = "", role: str = "user", google_sub: str = ""):
+    """Create/update user profile on successful authentication."""
+    try:
+        if not email:
+            return None
+
+        db = get_db()
+        collection = db["users"]
+
+        now = datetime.utcnow()
+        update_doc = {
+            "$set": {
+                "email": email,
+                "name": name or email.split("@")[0],
+                "picture": picture or "",
+                "provider": provider,
+                "role": role,
+                "user_id": email,
+                "google_sub": google_sub or "",
+                "last_login_at": now,
+                "updated_at": now,
+            },
+            "$setOnInsert": {
+                "created_at": now,
+            },
+        }
+
+        collection.update_one({"email": email}, update_doc, upsert=True)
+        user = collection.find_one({"email": email}, {"_id": 0})
+        return user
+    except Exception as e:
+        print(f"[User upsert error] {str(e)}")
+        return None
+
 def store_vote(user_id: str, proverb_id: str, keyword: str, vote_type: str):
     """
     Store user vote (upvote/downvote)
