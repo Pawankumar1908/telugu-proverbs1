@@ -2,7 +2,6 @@ fastapi
 uvicorn
 pandas
 numpy
-google-genai
-openai
 python-dotenv
 pymongo
+indic-transliteration
