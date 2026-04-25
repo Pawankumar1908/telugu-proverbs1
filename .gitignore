@@ -16,3 +16,8 @@ backend/.env.*
 *.pfx
 id_rsa
 id_ed25519
+
+.venv/
+**/__pycache__/
+frontend/node_modules/
+*.pyc

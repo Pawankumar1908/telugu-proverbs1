@@ -6,6 +6,7 @@ load_dotenv()
 MODEL_NAME = "intfloat/multilingual-e5-base"
 TOP_K = 20
 SIMILARITY_THRESHOLD = 0.75
+USE_EMBEDDINGS = os.getenv("USE_EMBEDDINGS", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 BASE_DIR = os.path.dirname(__file__)
 DATA_PATH = os.path.join(BASE_DIR, "data", "proverbs.csv")

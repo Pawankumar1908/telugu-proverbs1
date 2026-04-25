@@ -2,8 +2,6 @@ fastapi
 uvicorn
 pandas
 numpy
-faiss-cpu
-sentence-transformers
 google-genai
 openai
 python-dotenv
