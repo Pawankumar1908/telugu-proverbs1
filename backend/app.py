@@ -10,8 +10,6 @@ from db import store_vote, get_downvoted_proverbs, get_upvoted_proverbs, add_pro
 import csv
 from io import StringIO
 from indic_transliteration.sanscript import transliterate, TELUGU, ITRANS
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 
 app = FastAPI()
 allowed_origins = [
@@ -177,6 +175,9 @@ def google_auth(req: GoogleAuthRequest):
         raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID is not configured")
 
     try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+
         payload = id_token.verify_oauth2_token(
             req.credential,
             google_requests.Request(),
@@ -208,6 +209,8 @@ def google_auth(req: GoogleAuthRequest):
             "provider": "google",
             "profile": user or {}
         }
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Google auth dependency is missing. Install google-auth.")
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid Google token")
 
