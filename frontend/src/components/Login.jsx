@@ -6,7 +6,6 @@ export default function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const googleButtonRef = useRef(null);
@@ -133,31 +132,27 @@ export default function Login({ onLogin }) {
       <div className="auth-card">
         <div className="auth-copy">
           <p className="user-eyebrow">Telugu Proverbs Platform</p>
-          <h1>{isRegister ? "Create Account" : "Welcome Back"}</h1>
+          <h1>Welcome Back</h1>
           <p className="user-subtitle">
-            {isRegister
-              ? "Create your account to search, vote, save favorites, and contribute new proverbs."
-              : "Log in to continue exploring Telugu proverb wisdom with the same shared dashboard experience."}
+            Use Google Sign-In for user access. Use email/password only for admin login.
           </p>
         </div>
 
-        {isRegister ? <div className="annotate-status is-warning">Use a Gmail address for registration.</div> : null}
-
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="annotate-field">
-            <label>Email</label>
+            <label>Admin Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               className="user-input"
-              placeholder={isRegister ? "your@gmail.com" : "your@email.com"}
+              placeholder="admin@email.com"
             />
           </div>
 
           <div className="annotate-field">
-            <label>Password</label>
+            <label>Admin Password</label>
             <div className="auth-password-wrap">
               <input
                 type={showPassword ? "text" : "password"}
@@ -165,7 +160,7 @@ export default function Login({ onLogin }) {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
                 className="user-input"
-                placeholder={isRegister ? "Create password" : "Enter your password"}
+                placeholder="Enter admin password"
               />
               <button
                 type="button"
@@ -181,7 +176,7 @@ export default function Login({ onLogin }) {
           {error ? <div className="annotate-status is-error">{error}</div> : null}
 
           <button type="submit" disabled={loading} className="user-btn user-btn-primary auth-submit-btn">
-            {loading ? "Please wait..." : isRegister ? "Register" : "Login"}
+            {loading ? "Please wait..." : "Admin Login"}
           </button>
         </form>
 
@@ -193,22 +188,6 @@ export default function Login({ onLogin }) {
             <div ref={googleButtonRef} className="auth-google-btn" />
           </div>
         ) : null}
-
-        <p className="auth-switch">
-          {isRegister ? "Already have an account?" : "Don't have an account?"}
-          <button
-            onClick={() => {
-              setIsRegister(!isRegister);
-              setError(null);
-              setEmail("");
-              setPassword("");
-            }}
-            disabled={loading}
-            className="auth-switch-btn"
-          >
-            {isRegister ? "Login" : "Register"}
-          </button>
-        </p>
       </div>
     </div>
   );
