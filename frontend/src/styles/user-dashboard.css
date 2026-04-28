@@ -58,96 +58,53 @@ body {
   min-height: 100vh;
   color: var(--user-text);
   background:
-    linear-gradient(135deg, rgba(9, 15, 46, 0.22), rgba(12, 17, 48, 0.22)),
-    url("/login-bg.jpeg") center / cover no-repeat;
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.2), transparent 40%),
+    linear-gradient(135deg, #090f2e 0%, #0f1a4a 56%, #0c1438 100%);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  padding: 24px;
+  justify-content: center;
+  padding: 0;
 }
 
 .auth-container {
-  display: flex;
-  justify-content: flex-end;
-  max-width: 1160px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+  min-height: 100vh;
   width: 100%;
-  align-items: stretch;
+  align-items: center;
 }
 
 .auth-decoration {
-  display: none;
-}
-
-.auth-circle {
-  position: relative;
-  width: 430px;
-  height: 430px;
-  border-radius: 50%;
-  border: 2px solid rgba(245, 158, 11, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  box-shadow:
-    0 0 70px rgba(245, 158, 11, 0.24),
-    0 0 140px rgba(245, 158, 11, 0.14),
-    inset 0 0 60px rgba(245, 158, 11, 0.12);
-  background: radial-gradient(circle at 36% 28%, rgba(245, 158, 11, 0.12), rgba(7, 11, 33, 0.9) 62%);
+  height: 100%;
+  min-height: 100vh;
+  padding: 28px 18px;
 }
 
-.auth-circle::before {
-  content: "";
-  position: absolute;
-  width: 460px;
-  height: 460px;
-  border-radius: 50%;
-  border: 2px dotted rgba(251, 191, 36, 0.32);
-  top: -15px;
-  left: -15px;
-}
-
-.auth-circle::after {
-  content: "";
-  position: absolute;
-  inset: 18px;
-  border-radius: 50%;
-  border: 1px solid rgba(251, 191, 36, 0.22);
+.auth-circle {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  background: url("/login-bg.jpeg") left center / contain no-repeat;
 }
 
 .auth-circle-content {
-  position: relative;
-  text-align: center;
-  z-index: 2;
-  padding: 0 34px;
+  display: none;
 }
 
 .auth-circle-pattern {
-  position: absolute;
-  inset: -64px 30px auto;
-  margin: 0;
-  color: rgba(226, 232, 240, 0.2);
-  font-size: 2rem;
-  line-height: 1.4;
-  letter-spacing: 1px;
-  pointer-events: none;
+  display: none;
 }
 
 .auth-circle-text {
-  font-size: 4.2rem;
-  font-weight: 700;
-  color: #fef9c3;
-  margin: 0 0 8px 0;
-  font-family: "Brush Script MT", "Segoe Script", cursive;
-  text-shadow: 0 0 16px rgba(245, 158, 11, 0.25), 0 4px 10px rgba(0, 0, 0, 0.45);
+  display: none;
 }
 
 .auth-circle-subtitle {
-  margin: 0 auto;
-  font-size: 1.08rem;
-  color: rgba(226, 232, 240, 0.92);
-  line-height: 1.6;
-  max-width: 310px;
+  display: none;
 }
 
 .auth-card {
@@ -163,7 +120,7 @@ body {
     inset 0 0 24px rgba(148, 163, 184, 0.08);
   max-width: 430px;
   width: min(430px, 100%);
-  margin-left: auto;
+  margin: 0 auto;
 }
 
 .auth-card-header {
@@ -189,8 +146,12 @@ body {
 }
 
 @media (max-width: 1024px) {
-  .auth-page {
-    justify-content: center;
+  .auth-container {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-decoration {
+    display: none;
   }
 
   .auth-card {
