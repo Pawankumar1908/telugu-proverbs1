@@ -7,6 +7,7 @@ const adminTabs = [
   { id: "new-annotations", label: "New Annotations", description: "Review and moderate pending submissions." },
   { id: "annotators", label: "Annotators", description: "Track contributor performance." },
   { id: "history", label: "History", description: "Review approval and rejection timeline." },
+  { id: "signed-users", label: "Signed Users", description: "View unique users who signed in." },
   { id: "repository", label: "Repository", description: "Browse and export proverb records." },
   { id: "add-proverb", label: "Add Proverb", description: "Create an individual proverb entry." },
   { id: "upload-csv", label: "Upload CSV", description: "Bulk upload proverb dataset rows." },
@@ -27,6 +28,7 @@ export default function AdminDashboard({ user, onLogout }) {
   const [annotators, setAnnotators] = useState(null);
   const [newAnnotations, setNewAnnotations] = useState(null);
   const [history, setHistory] = useState(null);
+  const [signedUsers, setSignedUsers] = useState(null);
   const [repository, setRepository] = useState(null);
   const [searchRepo, setSearchRepo] = useState("");
   const [formData, setFormData] = useState(initialFormState);
@@ -93,12 +95,23 @@ export default function AdminDashboard({ user, onLogout }) {
     }
   };
 
+  const fetchSignedUsers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/signed-in-users`);
+      const data = await response.json();
+      setSignedUsers(data.data || []);
+    } catch (err) {
+      setMessage("Error: Failed to fetch signed users");
+    }
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === "analytics") fetchAnalytics();
     if (tab === "new-annotations") fetchNewAnnotations();
     if (tab === "annotators") fetchAnnotators();
     if (tab === "history") fetchHistory();
+    if (tab === "signed-users") fetchSignedUsers();
     if (tab === "repository") fetchRepository(searchRepo.trim());
   };
 
@@ -610,6 +623,41 @@ export default function AdminDashboard({ user, onLogout }) {
                   </div>
                 ) : (
                   <EmptyState title="No history yet" description="Approval activity will appear here once moderation starts." />
+                )}
+              </section>
+            ) : null}
+
+            {activeTab === "signed-users" ? (
+              <section>
+                {signedUsers && signedUsers.length > 0 ? (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Email</th>
+                          <th>Name</th>
+                          <th>Provider</th>
+                          <th>Role</th>
+                          <th>Sign-ins</th>
+                          <th>Last Sign-in</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {signedUsers.map((userItem, idx) => (
+                          <tr key={`${userItem.email}-${idx}`}>
+                            <td>{userItem.email || "-"}</td>
+                            <td>{userItem.name || "-"}</td>
+                            <td>{userItem.provider || "-"}</td>
+                            <td>{userItem.role || "-"}</td>
+                            <td>{userItem.signin_count || 0}</td>
+                            <td>{userItem.last_signin_at ? new Date(userItem.last_signin_at).toLocaleString() : "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <EmptyState title="No signed users yet" description="Users will appear here after login." />
                 )}
               </section>
             ) : null}

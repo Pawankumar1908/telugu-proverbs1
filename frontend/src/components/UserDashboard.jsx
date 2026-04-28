@@ -88,17 +88,28 @@ export default function UserDashboard({ user, onLogout, onAnnotate }) {
 
   const addFavorite = async (proverb) => {
     try {
-      await fetch(`${API_BASE_URL}/favorites`, {
+      const response = await fetch(`${API_BASE_URL}/favorites`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: user.user_id,
-          proverb: proverb.proverb_english,
-          title: proverb.proverb_telugu,
+          proverb: {
+            id: proverb.id || proverb._id || proverb.proverb_english || proverb.proverb_telugu,
+            proverb_telugu: proverb.proverb_telugu || proverb.proverb || proverb.title || "",
+            proverb_english: proverb.proverb_english || "",
+            meaning: proverb.meaning || "",
+            keywords: proverb.keywords || "",
+            theme: proverb.theme || "",
+            context: proverb.context || "",
+          },
         }),
       });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || "Failed to add favorite");
+      }
       loadFavorites();
-      setMessage("Added to favorites!");
+      setMessage(data.already_exists ? "Already in favorites." : "Added to favorites!");
       setTimeout(() => setMessage(""), 2000);
     } catch (err) {
       setMessage("Failed to add favorite");
@@ -230,6 +241,14 @@ export default function UserDashboard({ user, onLogout, onAnnotate }) {
               </button>
             ))}
           </div>
+
+          <button type="button" className="user-btn user-btn-ghost user-sidebar-btn" onClick={() => setShowAboutModal(true)}>
+            About Us
+          </button>
+
+          <button type="button" className="user-btn user-btn-ghost user-sidebar-btn" onClick={onAnnotate}>
+            Annotate Proverb
+          </button>
 
           <button type="button" className="user-btn user-btn-danger user-sidebar-btn" onClick={onLogout}>
             Sign Out

@@ -3,6 +3,7 @@ MongoDB utility functions for user feedback and admin operations
 """
 
 from pymongo import MongoClient
+from pymongo.errors import DuplicateKeyError
 from config import MONGODB_URI, MONGODB_DB
 from datetime import datetime
 from bson.objectid import ObjectId
@@ -18,7 +19,14 @@ def get_db():
         _client = MongoClient(MONGODB_URI)
         _db = _client[MONGODB_DB]
         print(f"[MongoDB] Connected to {MONGODB_DB}")
+        _ensure_indexes(_db)
     return _db
+
+
+def _ensure_indexes(db):
+    """Create indexes once per process to enforce uniqueness and speed lookups."""
+    db["user_favorites"].create_index([("user_id", 1), ("proverb_key", 1)], unique=True)
+    db["signed_in_users"].create_index([("email", 1)], unique=True)
 
 def close_db():
     """Close MongoDB connection"""
@@ -56,11 +64,112 @@ def upsert_user_auth(email: str, provider: str = "local", name: str = "", pictur
         }
 
         collection.update_one({"email": email}, update_doc, upsert=True)
+        track_signed_in_user(email=email, role=role, provider=provider, name=name, picture=picture)
         user = collection.find_one({"email": email}, {"_id": 0})
         return user
     except Exception as e:
         print(f"[User upsert error] {str(e)}")
         return None
+
+
+def track_signed_in_user(email: str, role: str = "user", provider: str = "local", name: str = "", picture: str = ""):
+    """Track unique signed-in users (insert once, update last sign-in on later logins)."""
+    try:
+        if not email:
+            return False
+        db = get_db()
+        collection = db["signed_in_users"]
+        now = datetime.utcnow()
+        collection.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "role": role,
+                    "provider": provider,
+                    "name": name or email.split("@")[0],
+                    "picture": picture or "",
+                    "last_signin_at": now,
+                    "updated_at": now,
+                },
+                "$setOnInsert": {
+                    "created_at": now,
+                    "signin_count": 1,
+                },
+                "$inc": {"signin_count": 1},
+            },
+            upsert=True,
+        )
+        return True
+    except Exception as e:
+        print(f"[Signed-in user track error] {str(e)}")
+        return False
+
+
+def get_signed_in_users():
+    """List all users who have ever signed in."""
+    try:
+        db = get_db()
+        users = list(db["signed_in_users"].find().sort("last_signin_at", -1))
+        return users
+    except Exception as e:
+        print(f"[Get signed-in users error] {str(e)}")
+        return []
+
+
+def add_favorite_proverb(user_id: str, proverb: dict):
+    """Store a proverb as favorite once per user."""
+    try:
+        if not user_id:
+            return {"success": False, "error": "Missing user_id"}
+
+        proverb_key = str(
+            proverb.get("id")
+            or proverb.get("_id")
+            or proverb.get("proverb_english")
+            or proverb.get("proverb_telugu")
+            or ""
+        ).strip()
+
+        if not proverb_key:
+            return {"success": False, "error": "Invalid proverb payload"}
+
+        db = get_db()
+        collection = db["user_favorites"]
+        now = datetime.utcnow()
+        doc = {
+            "user_id": user_id,
+            "proverb_key": proverb_key.lower(),
+            "proverb": {
+                "id": proverb.get("id") or proverb_key,
+                "proverb_telugu": proverb.get("proverb_telugu") or proverb.get("proverb", ""),
+                "proverb_english": proverb.get("proverb_english") or proverb.get("title", ""),
+                "meaning": proverb.get("meaning", ""),
+                "keywords": proverb.get("keywords", ""),
+                "theme": proverb.get("theme", ""),
+                "context": proverb.get("context", ""),
+            },
+            "created_at": now,
+            "updated_at": now,
+        }
+        collection.insert_one(doc)
+        return {"success": True, "already_exists": False}
+    except DuplicateKeyError:
+        return {"success": True, "already_exists": True}
+    except Exception as e:
+        print(f"[Add favorite error] {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+def get_user_favorites(user_id: str):
+    """Return favorite proverb list for a user."""
+    try:
+        db = get_db()
+        collection = db["user_favorites"]
+        favorites = list(collection.find({"user_id": user_id}).sort("created_at", -1))
+        return [item.get("proverb", {}) for item in favorites]
+    except Exception as e:
+        print(f"[Get favorites error] {str(e)}")
+        return []
 
 def store_vote(user_id: str, proverb_id: str, keyword: str, vote_type: str):
     """
@@ -195,14 +304,21 @@ def bulk_insert_proverbs(proverbs: list):
         inserted_count = 0
         skipped_count = 0
         
+        seen_upload = set()
         for proverb in proverbs:
             proverb_telugu = str(proverb.get("proverb_telugu", "") or "").strip()
             proverb_english = str(proverb.get("proverb_english", "") or "").strip()
+            uniqueness_key = (proverb_telugu.lower(), proverb_english.lower())
 
             # Skip records that don't contain at least one proverb text field.
             if not proverb_telugu and not proverb_english:
                 skipped_count += 1
                 continue
+
+            if uniqueness_key in seen_upload:
+                skipped_count += 1
+                continue
+            seen_upload.add(uniqueness_key)
 
             existing = check_duplicate_proverb_by_fields(
                 proverb_telugu=proverb_telugu,
@@ -232,9 +348,8 @@ def get_analytics():
         # Count total proverbs
         proverbs_count = db["proverbs"].count_documents({})
         
-        # Count user feedback entries (unique users)
-        users = db["user_feedback"].distinct("user_id")
-        users_count = len(users)
+        # Count signed-in users
+        users_count = db["signed_in_users"].count_documents({})
         
         # Count total feedback
         feedback_count = db["user_feedback"].count_documents({})

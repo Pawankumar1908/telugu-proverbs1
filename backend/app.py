@@ -6,7 +6,7 @@ from model import ProverbModel
 from session import get_session
 from utils import format_cards, format_explanation
 from config import ADMIN_EMAIL, ADMIN_PASSWORD, FRONTEND_ORIGINS, GOOGLE_CLIENT_ID
-from db import store_vote, get_downvoted_proverbs, get_upvoted_proverbs, add_proverb, get_all_proverbs, bulk_insert_proverbs, get_analytics, check_duplicate_proverb_by_fields, submit_annotation, get_pending_annotations, approve_annotation, reject_annotation, get_annotator_stats, get_annotation_history, get_repository_proverbs, delete_proverb, upsert_user_auth
+from db import store_vote, get_downvoted_proverbs, get_upvoted_proverbs, add_proverb, get_all_proverbs, bulk_insert_proverbs, get_analytics, check_duplicate_proverb_by_fields, submit_annotation, get_pending_annotations, approve_annotation, reject_annotation, get_annotator_stats, get_annotation_history, get_repository_proverbs, delete_proverb, upsert_user_auth, add_favorite_proverb, get_user_favorites, get_signed_in_users
 import csv
 from io import StringIO
 from indic_transliteration.sanscript import transliterate, TELUGU, ITRANS
@@ -69,6 +69,11 @@ class AnnotationRequest(BaseModel):
 
 class GoogleAuthRequest(BaseModel):
     credential: str
+
+
+class FavoriteRequest(BaseModel):
+    user_id: str
+    proverb: dict
 
 
 def _normalize_csv_header(header: str) -> str:
@@ -136,9 +141,8 @@ def apply_vote_preferences(results: list, user_id: str | None, keyword: str) -> 
 @app.post("/login")
 def login(req: LoginRequest):
     """
-    Login endpoint supporting both admin and normal users
-    Admin credentials are configured via ADMIN_EMAIL / ADMIN_PASSWORD env vars.
-    Normal users: Any email/password (or integrate Supabase)
+    Admin-only email/password login.
+    User login should happen through Google Sign-In (/auth/google).
     """
     if not req.email or not req.password:
         raise HTTPException(status_code=400, detail="Email and password required")
@@ -153,16 +157,8 @@ def login(req: LoginRequest):
             "token": f"admin-token-{req.email}",
             "user_id": req.email
         }
-    
-    # Normal user login (simplified)
-    upsert_user_auth(email=req.email, provider="local", role="user")
-    return {
-        "success": True,
-        "role": "user",
-        "email": req.email,
-        "token": f"user-token-{req.email}",
-        "user_id": req.email  # Use email as user_id
-    }
+
+    raise HTTPException(status_code=401, detail="Invalid admin credentials. Use Google Sign-In for user access.")
 
 
 @app.post("/auth/google")
@@ -209,8 +205,8 @@ def google_auth(req: GoogleAuthRequest):
             "provider": "google",
             "profile": user or {}
         }
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Google auth dependency is missing. Install google-auth.")
+    except ImportError as exc:
+        raise HTTPException(status_code=500, detail=f"Google auth dependency is missing: {str(exc)}")
     except ValueError:
         raise HTTPException(status_code=401, detail="Invalid Google token")
 
@@ -569,6 +565,19 @@ def get_annotators_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/admin/signed-in-users")
+def get_admin_signed_in_users():
+    """List users who have signed in via admin/local/google."""
+    try:
+        users = get_signed_in_users()
+        for user in users:
+            if "_id" in user:
+                user["_id"] = str(user["_id"])
+        return {"success": True, "count": len(users), "data": users}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/admin/history")
 def get_history(status: str = None):
     """Get history of approved/rejected annotations"""
@@ -663,12 +672,16 @@ def search_proverbs(query: str, user_id: str = None):
 
 
 @app.post("/favorites")
-def add_favorite(req: BaseModel):
+def add_favorite(req: FavoriteRequest):
     """Add proverb to user's favorites"""
     try:
+        result = add_favorite_proverb(req.user_id, req.proverb)
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Failed to add favorite"))
         return {
             "success": True,
-            "message": "Added to favorites"
+            "already_exists": result.get("already_exists", False),
+            "message": "Already in favorites" if result.get("already_exists") else "Added to favorites"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -678,15 +691,11 @@ def add_favorite(req: BaseModel):
 def get_favorites(user_id: str):
     """Get user's favorite proverbs"""
     try:
-        # For now, return all proverbs (you can modify this to filter by user in MongoDB)
-        proverbs = get_all_proverbs()
-        for p in proverbs:
-            if "_id" in p:
-                p["_id"] = str(p["_id"])
+        proverbs = get_user_favorites(user_id)
         return {
             "success": True,
             "count": len(proverbs),
-            "data": proverbs[:10]  # Return first 10 as samples
+            "data": proverbs
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
