@@ -8,11 +8,12 @@ export default function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showAdminForm, setShowAdminForm] = useState(false);
   const googleButtonRef = useRef(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
   useEffect(() => {
-    if (!googleClientId || !googleButtonRef.current) return;
+    if (!googleClientId || !googleButtonRef.current || showAdminForm) return;
 
     const handleGoogleCredential = async (response) => {
       if (!response?.credential) {
@@ -82,9 +83,9 @@ export default function Login({ onLogin }) {
         script.parentNode.removeChild(script);
       }
     };
-  }, [googleClientId, onLogin]);
+  }, [googleClientId, onLogin, showAdminForm]);
 
-  const handleSubmit = async (e) => {
+  const handleAdminSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -127,67 +128,117 @@ export default function Login({ onLogin }) {
     }
   };
 
+  const handleGuestLogin = () => {
+    onLogin({
+      email: "guest",
+      token: "guest-token",
+      role: "guest",
+      user_id: "guest-" + Date.now(),
+      name: "Guest User",
+      picture: "",
+      provider: "guest",
+    });
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-copy">
           <p className="user-eyebrow">Telugu Proverbs Platform</p>
-          <h1>Welcome Back</h1>
+          <h1>Welcome</h1>
           <p className="user-subtitle">
-            Use Google Sign-In for user access. Use email/password only for admin login.
+            Explore Telugu proverbs and share wisdom with the community.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="annotate-field">
-            <label>Admin Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="user-input"
-              placeholder="admin@email.com"
-            />
-          </div>
+        {!showAdminForm ? (
+          <div className="auth-form">
+            {error ? <div className="annotate-status is-error">{error}</div> : null}
 
-          <div className="annotate-field">
-            <label>Admin Password</label>
-            <div className="auth-password-wrap">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                className="user-input"
-                placeholder="Enter admin password"
-              />
+            {googleClientId ? (
+              <div className="auth-google-wrap">
+                <p className="auth-section-label">Sign up with Google:</p>
+                <div ref={googleButtonRef} className="auth-google-btn" />
+              </div>
+            ) : null}
+
+            <div className="auth-button-group">
               <button
                 type="button"
-                className="auth-password-toggle"
-                onClick={() => setShowPassword((prev) => !prev)}
+                onClick={() => setShowAdminForm(true)}
                 disabled={loading}
+                className="user-btn user-btn-ghost"
               >
-                {showPassword ? "Hide" : "View"}
+                Admin Login
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGuestLogin}
+                disabled={loading}
+                className="user-btn user-btn-ghost"
+              >
+                Continue as Guest
               </button>
             </div>
           </div>
-
-          {error ? <div className="annotate-status is-error">{error}</div> : null}
-
-          <button type="submit" disabled={loading} className="user-btn user-btn-primary auth-submit-btn">
-            {loading ? "Please wait..." : "Admin Login"}
-          </button>
-        </form>
-
-        {googleClientId ? (
-          <div className="auth-google-wrap">
-            <div className="auth-divider">
-              <span>or continue with</span>
+        ) : (
+          <form onSubmit={handleAdminSubmit} className="auth-form">
+            <div className="annotate-field">
+              <label>Admin Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                className="user-input"
+                placeholder="admin@email.com"
+              />
             </div>
-            <div ref={googleButtonRef} className="auth-google-btn" />
-          </div>
-        ) : null}
+
+            <div className="annotate-field">
+              <label>Admin Password</label>
+              <div className="auth-password-wrap">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  className="user-input"
+                  placeholder="Enter admin password"
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={loading}
+                >
+                  {showPassword ? "Hide" : "View"}
+                </button>
+              </div>
+            </div>
+
+            {error ? <div className="annotate-status is-error">{error}</div> : null}
+
+            <button type="submit" disabled={loading} className="user-btn user-btn-primary auth-submit-btn">
+              {loading ? "Please wait..." : "Admin Login"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowAdminForm(false);
+                setError(null);
+                setEmail("");
+                setPassword("");
+              }}
+              disabled={loading}
+              className="user-btn user-btn-ghost"
+            >
+              Back
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

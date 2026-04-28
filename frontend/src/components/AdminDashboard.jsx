@@ -29,6 +29,7 @@ export default function AdminDashboard({ user, onLogout }) {
   const [newAnnotations, setNewAnnotations] = useState(null);
   const [history, setHistory] = useState(null);
   const [signedUsers, setSignedUsers] = useState(null);
+  const [signedUsersCount, setSignedUsersCount] = useState(0);
   const [repository, setRepository] = useState(null);
   const [searchRepo, setSearchRepo] = useState("");
   const [formData, setFormData] = useState(initialFormState);
@@ -40,6 +41,7 @@ export default function AdminDashboard({ user, onLogout }) {
 
   useEffect(() => {
     fetchAnalytics();
+    fetchSignedUsersCount();
   }, []);
 
   const fetchAnalytics = async () => {
@@ -49,6 +51,16 @@ export default function AdminDashboard({ user, onLogout }) {
       setAnalytics(data.data);
     } catch (err) {
       setMessage("Error: Failed to fetch analytics");
+    }
+  };
+
+  const fetchSignedUsersCount = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/signed-in-users`);
+      const data = await response.json();
+      setSignedUsersCount(data.count || 0);
+    } catch (err) {
+      console.error("Error fetching signed users count:", err);
     }
   };
 
@@ -372,6 +384,10 @@ export default function AdminDashboard({ user, onLogout }) {
                     <article className="admin-stat-card violet">
                       <h4>Total Votes</h4>
                       <p>{analytics.total_feedback ?? 0}</p>
+                    </article>
+                    <article className="admin-stat-card orange">
+                      <h4>Signed-In Users</h4>
+                      <p>{signedUsersCount}</p>
                     </article>
                   </div>
                 ) : (

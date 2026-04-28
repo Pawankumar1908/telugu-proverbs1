@@ -3,6 +3,7 @@ import { sendMessage } from "./api/chatApi";
 import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import UserDashboard from "./components/UserDashboard";
+import GuestDashboard from "./components/GuestDashboard";
 import AnnotatePage from "./components/AnnotatePage";
 import ChatHistory from "./components/ChatHistory";
 import ProverbCard from "./components/ProverbCard";
@@ -222,6 +223,11 @@ export default function App() {
   // Show admin dashboard for admin users
   if (user.role === "admin") {
     return <AdminDashboard user={user} onLogout={handleLogout} />;
+  }
+
+  // Show guest dashboard for guest users
+  if (user.role === "guest") {
+    return <GuestDashboard user={user} onLogout={handleLogout} />;
   }
 
   // Show user dashboard for regular users
