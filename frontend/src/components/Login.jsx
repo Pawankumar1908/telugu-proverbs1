@@ -62,7 +62,7 @@ export default function Login({ onLogin }) {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: "outline",
         size: "large",
-        width: 320,
+        width: "100%",
       });
     };
 
@@ -142,103 +142,116 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-copy">
-          <p className="user-eyebrow">Telugu Proverbs Platform</p>
-          <h1>Welcome</h1>
-          <p className="user-subtitle">
-            Explore Telugu proverbs and share wisdom with the community.
-          </p>
-        </div>
-
-        {!showAdminForm ? (
-          <div className="auth-form">
-            {error ? <div className="annotate-status is-error">{error}</div> : null}
-
-            {googleClientId ? (
-              <div className="auth-google-wrap">
-                <p className="auth-section-label">Sign up with Google:</p>
-                <div ref={googleButtonRef} className="auth-google-btn" />
-              </div>
-            ) : null}
-
-            <div className="auth-button-group">
-              <button
-                type="button"
-                onClick={() => setShowAdminForm(true)}
-                disabled={loading}
-                className="user-btn user-btn-ghost"
-              >
-                Admin Login
-              </button>
-
-              <button
-                type="button"
-                onClick={handleGuestLogin}
-                disabled={loading}
-                className="user-btn user-btn-ghost"
-              >
-                Continue as Guest
-              </button>
+      <div className="auth-container">
+        <div className="auth-decoration">
+          <div className="auth-circle">
+            <div className="auth-circle-content">
+              <p className="auth-circle-pattern">
+                సత్యం ధర్మం శాంతి కష్టం జ్ఞానం నమ్మకం గుణం మిత్రం సద్గతి
+              </p>
+              <h2 className="auth-circle-text">Welcome</h2>
+              <p className="auth-circle-subtitle">Explore Telugu proverbs and share wisdom with the community.</p>
             </div>
           </div>
-        ) : (
-          <form onSubmit={handleAdminSubmit} className="auth-form">
-            <div className="annotate-field">
-              <label>Admin Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className="user-input"
-                placeholder="admin@email.com"
-              />
-            </div>
+        </div>
 
-            <div className="annotate-field">
-              <label>Admin Password</label>
-              <div className="auth-password-wrap">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  className="user-input"
-                  placeholder="Enter admin password"
-                />
+        <div className="auth-card">
+          <div className="auth-card-header">
+            <p className="auth-platform-title">TELUGU PROVERBS PLATFORM</p>
+            {showAdminForm ? <h1 className="auth-card-title">Admin Login</h1> : null}
+          </div>
+
+          {!showAdminForm ? (
+            <div className="auth-form">
+              {error ? <div className="annotate-status is-error">{error}</div> : null}
+
+              {googleClientId ? (
+                <div className="auth-google-wrap">
+                  <p className="auth-section-label">Sign up with Google:</p>
+                  <div ref={googleButtonRef} className="auth-google-btn" />
+                </div>
+              ) : null}
+
+              <div className="auth-divider" />
+
+              <div className="auth-button-group">
                 <button
                   type="button"
-                  className="auth-password-toggle"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() => setShowAdminForm(true)}
                   disabled={loading}
+                  className="user-btn user-btn-ghost"
                 >
-                  {showPassword ? "Hide" : "View"}
+                  Admin Login
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGuestLogin}
+                  disabled={loading}
+                  className="user-btn user-btn-ghost"
+                >
+                  Continue as Guest
                 </button>
               </div>
             </div>
+          ) : (
+            <form onSubmit={handleAdminSubmit} className="auth-form">
+              <div className="annotate-field">
+                <label>Admin Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  className="user-input"
+                  placeholder="admin@email.com"
+                />
+              </div>
 
-            {error ? <div className="annotate-status is-error">{error}</div> : null}
+              <div className="annotate-field">
+                <label>Admin Password</label>
+                <div className="auth-password-wrap">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    className="user-input"
+                    placeholder="Enter admin password"
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-toggle"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    disabled={loading}
+                  >
+                    {showPassword ? "Hide" : "View"}
+                  </button>
+                </div>
+              </div>
 
-            <button type="submit" disabled={loading} className="user-btn user-btn-primary auth-submit-btn">
-              {loading ? "Please wait..." : "Admin Login"}
-            </button>
+              {error ? <div className="annotate-status is-error">{error}</div> : null}
 
-            <button
-              type="button"
-              onClick={() => {
-                setShowAdminForm(false);
-                setError(null);
-                setEmail("");
-                setPassword("");
-              }}
-              disabled={loading}
-              className="user-btn user-btn-ghost"
-            >
-              Back
-            </button>
-          </form>
-        )}
+              <button type="submit" disabled={loading} className="user-btn user-btn-primary auth-submit-btn">
+                {loading ? "Please wait..." : "Admin Login"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAdminForm(false);
+                  setError(null);
+                  setEmail("");
+                  setPassword("");
+                }}
+                disabled={loading}
+                className="user-btn user-btn-ghost"
+              >
+                Back
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
