@@ -6,3 +6,4 @@ python-dotenv
 pymongo
 indic-transliteration
 google-auth
+requests
