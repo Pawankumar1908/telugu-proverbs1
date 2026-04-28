@@ -57,9 +57,7 @@ body {
 .auth-page {
   min-height: 100vh;
   color: var(--user-text);
-  background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.2), transparent 40%),
-    linear-gradient(135deg, #090f2e 0%, #0f1a4a 56%, #0c1438 100%);
+  background: #131a2c;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   align-items: center;
@@ -82,7 +80,7 @@ body {
   height: 100%;
   min-height: 100vh;
   padding: 28px 18px;
-  background: radial-gradient(circle at center, #122053 0%, #0b1543 68%, #09103a 100%);
+  background: #131a2c;
 }
 
 .auth-circle {
@@ -98,8 +96,8 @@ body {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(11, 21, 67, 0.45) 0%, rgba(11, 21, 67, 0.05) 20%, rgba(11, 21, 67, 0.05) 80%, rgba(11, 21, 67, 0.45) 100%),
-    linear-gradient(180deg, rgba(11, 21, 67, 0.4) 0%, rgba(11, 21, 67, 0.04) 18%, rgba(11, 21, 67, 0.04) 82%, rgba(11, 21, 67, 0.4) 100%);
+    linear-gradient(90deg, rgba(19, 26, 44, 0.52) 0%, rgba(19, 26, 44, 0.07) 20%, rgba(19, 26, 44, 0.07) 80%, rgba(19, 26, 44, 0.52) 100%),
+    linear-gradient(180deg, rgba(19, 26, 44, 0.48) 0%, rgba(19, 26, 44, 0.06) 18%, rgba(19, 26, 44, 0.06) 82%, rgba(19, 26, 44, 0.48) 100%);
   pointer-events: none;
 }
 
