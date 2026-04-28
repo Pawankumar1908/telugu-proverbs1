@@ -224,10 +224,6 @@ export default function UserDashboard({ user, onLogout, onAnnotate }) {
             + New Option
           </button>
 
-          <button type="button" className="user-btn user-btn-ghost user-sidebar-btn" onClick={onAnnotate}>
-            Annotate Proverb
-          </button>
-
           <div className="user-session-list">
             {sessions.map((session) => (
               <button
@@ -244,10 +240,6 @@ export default function UserDashboard({ user, onLogout, onAnnotate }) {
 
           <button type="button" className="user-btn user-btn-ghost user-sidebar-btn" onClick={() => setShowAboutModal(true)}>
             About Us
-          </button>
-
-          <button type="button" className="user-btn user-btn-ghost user-sidebar-btn" onClick={onAnnotate}>
-            Annotate Proverb
           </button>
 
           <button type="button" className="user-btn user-btn-danger user-sidebar-btn" onClick={onLogout}>
