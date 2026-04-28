@@ -62,6 +62,9 @@ export default function Login({ onLogin }) {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: "outline",
         size: "large",
+        text: "continue_with",
+        shape: "pill",
+        logo_alignment: "left",
         width: "100%",
       });
     };
