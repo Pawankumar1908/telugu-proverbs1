@@ -58,9 +58,8 @@ body {
   min-height: 100vh;
   color: var(--user-text);
   background:
-    radial-gradient(circle at 78% 45%, rgba(99, 102, 241, 0.2), transparent 34%),
-    radial-gradient(circle at 26% 34%, rgba(245, 158, 11, 0.14), transparent 30%),
-    linear-gradient(135deg, #090f2e 0%, #111a43 52%, #0c1130 100%);
+    linear-gradient(135deg, rgba(9, 15, 46, 0.76), rgba(12, 17, 48, 0.76)),
+    url("/login-bg.jpeg") center / cover no-repeat;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   align-items: center;
