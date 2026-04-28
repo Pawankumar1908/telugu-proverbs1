@@ -373,6 +373,9 @@ export default function UserDashboard({ user, onLogout, onAnnotate }) {
               It is built for educational use so learners can understand proverb meaning, context, and real-life
               application more easily.
             </p>
+            <p>
+              <strong>Note:</strong> Mistakes can be made and annotations can be done to improve the data quality.
+            </p>
 
             <div className="user-modal-grid">
               <div className="user-modal-card">
